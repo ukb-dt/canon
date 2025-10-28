@@ -1,0 +1,179 @@
+import React, { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+
+// Ukb-Canon React component (Tailwind)
+// Default export: <UkbCanonPanel onPin={() => {}} />
+
+export default function UkbCanonPanel({ onPin = () => {} }) {
+  const noiseGroupRef = useRef(null);
+  const structuredPathRef = useRef(null);
+
+  // draw scattered noise points into an SVG group
+  function drawNoise() {
+    const g = noiseGroupRef.current;
+    if (!g) return;
+    g.innerHTML = "";
+    const n = 22;
+    for (let i = 0; i < n; i++) {
+      const x = 20 + (i / (n - 1)) * 320;
+      const y = 45 + Math.random() * 70;
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", x);
+      c.setAttribute("cy", y);
+      c.setAttribute("r", 3 + Math.random() * 2);
+      c.setAttribute("fill", "rgba(255,95,95,0.85)");
+      c.setAttribute("opacity", 0.95 - Math.random() * 0.4);
+      g.appendChild(c);
+    }
+  }
+
+  // build a smooth path (spline-like) for structured eps
+  function buildStructuredPath() {
+    const n = 12;
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const x = 20 + (i / (n - 1)) * 320;
+      const y = 70 + 18 * Math.sin(i * 1.3 + Date.now() / 1200) + 6 * Math.cos(i * 0.7);
+      pts.push([x, y]);
+    }
+    let d = "";
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      if (i === 0) d += `M ${p[0]} ${p[1]} `;
+      else {
+        const prev = pts[i - 1];
+        const midx = (prev[0] + p[0]) / 2;
+        const midy = (prev[1] + p[1]) / 2;
+        d += `Q ${prev[0]} ${prev[1]} ${midx} ${midy} `;
+      }
+    }
+    const last = pts[pts.length - 1];
+    d += `T ${last[0]} ${last[1]}`;
+    return d;
+  }
+
+  function animateToStructured() {
+    const path = structuredPathRef.current;
+    if (!path) return;
+    const d = buildStructuredPath();
+    path.setAttribute("d", d);
+    path.style.transition = `opacity 900ms ease-in-out, stroke-dashoffset 900ms linear`;
+    path.style.opacity = 1;
+    const len = path.getTotalLength ? path.getTotalLength() : 800;
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len;
+    requestAnimationFrame(() => {
+      path.style.strokeDashoffset = 0;
+    });
+    const g = noiseGroupRef.current;
+    if (g) {
+      Array.from(g.children).forEach((c) => {
+        c.style.transition = `opacity 900ms ease-in-out, transform 900ms ease`;
+        c.style.opacity = 0.08;
+        c.style.transform = `translateY(${10 + Math.random() * 8}px)`;
+      });
+    }
+  }
+
+  useEffect(() => {
+    drawNoise();
+    structuredPathRef.current.style.opacity = 0;
+    const t = setTimeout(() => animateToStructured(), 600);
+    const interval = setInterval(() => {
+      // periodically refresh noise and redraw structured path for liveliness
+      drawNoise();
+      animateToStructured();
+    }, 7000);
+    return () => {
+      clearTimeout(t);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <section className="max-w-5xl mx-auto my-8 p-6 rounded-2xl border border-white/5 bg-gradient-to-b from-[#06070a]/60 to-[#07080b]/50">
+      <header className="flex items-baseline gap-3 mb-2">
+        <h2 className="text-xl font-semibold">Ukb‑Fractal — Enterprise Canon</h2>
+        <span className="text-sm text-white/70">existential → operational • ϵ → ϵₜ</span>
+      </header>
+
+      <p className="text-sm text-white/80 mb-4">Compact alignment of your enterprise phases with the ukb‑fractal thermodynamic ladder. Suffering becomes memory when the noise term acquires time‑structure: <strong>ϵ → ϵₜ</strong>.</p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Table */}
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left border-b border-white/6">
+                <th className="py-3">Ontology</th>
+                <th className="py-3">Calculus</th>
+                <th className="py-3">Enterprise Phase</th>
+                <th className="py-3">Aesthetic / Energy</th>
+                <th className="py-3 text-right">Error</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/3">
+              <tr>
+                <td className="py-3">Soil (θ′)</td>
+                <td className="py-3">(x, y)</td>
+                <td className="py-3">Existential</td>
+                <td className="py-3">Suffering / Entropy</td>
+                <td className="py-3 text-right">ϵ</td>
+              </tr>
+              <tr>
+                <td className="py-3">Roots (θ)</td>
+                <td className="py-3">y(x)</td>
+                <td className="py-3">Tactical</td>
+                <td className="py-3">Form / Tactic</td>
+                <td className="py-3 text-right">ϵ → ϵₜ</td>
+              </tr>
+              <tr>
+                <td className="py-3">Trunk (Σ)</td>
+                <td className="py-3">dy/dx</td>
+                <td className="py-3">Ritual</td>
+                <td className="py-3">Style / Compression</td>
+                <td className="py-3 text-right">Gradient</td>
+              </tr>
+              <tr>
+                <td className="py-3">Branches (h(t))</td>
+                <td className="py-3">d²y/dx²</td>
+                <td className="py-3">Strategical</td>
+                <td className="py-3">Drama / Acceleration</td>
+                <td className="py-3 text-right">Feedback</td>
+              </tr>
+              <tr>
+                <td className="py-3">Canopy (ΔS)</td>
+                <td className="py-3">∫y dx</td>
+                <td className="py-3">Operational</td>
+                <td className="py-3">Beauty / Ledger</td>
+                <td className="py-3 text-right">∫(E+ϵₜ)dt</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Visual */}
+        <div className="p-4 rounded-lg border border-white/4 bg-white/2">
+          <div className="font-semibold mb-2">ϵ → ϵₜ (micro demo)</div>
+
+          <svg viewBox="0 0 360 140" width="100%" height="140" aria-hidden="true" className="bg-transparent">
+            <line x1="20" y1="120" x2="340" y2="120" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <g ref={noiseGroupRef} id="noise-points" fill="rgba(255,95,95,0.9)"></g>
+            <path ref={structuredPathRef} id="structured-path" d="" stroke="rgba(126,87,194,0.95)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0 }} />
+            <text x="20" y="12" fontSize="11" fill="rgba(255,255,255,0.65)">time →</text>
+            <text x="18" y="132" fontSize="10" fill="rgba(255,255,255,0.45)">amplitude</text>
+          </svg>
+
+          <p className="mt-3 text-sm text-white/80"><strong>Interpretation:</strong> raw shocks become structured memory/feedback when the system encodes them across time — that’s ϵ → ϵₜ.</p>
+
+          <div className="mt-3 flex gap-3">
+            <motion.button whileTap={{ scale: 0.96 }} onClick={() => { drawNoise(); setTimeout(animateToStructured, 220); }} className="px-3 py-1 rounded-md text-sm bg-transparent border border-white/6">Replay</motion.button>
+            <motion.button whileTap={{ scale: 0.96 }} onClick={() => onPin()} className="px-3 py-1 rounded-md text-sm bg-[#2b334a] border border-white/6">Pin as Ledger</motion.button>
+          </div>
+        </div>
+      </div>
+
+      <footer className="mt-4 text-sm text-white/70">Ukb-canon • entropy → grammar • yebo.</footer>
+    </section>
+  );
+}
